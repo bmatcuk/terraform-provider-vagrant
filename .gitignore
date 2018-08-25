@@ -10,3 +10,8 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+terraform.tfstate*
+terraform-provider-vagrant
+config.ign.merged
+.terraform
+coverage.txt
