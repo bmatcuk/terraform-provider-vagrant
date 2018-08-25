@@ -5,7 +5,8 @@
 A Vagrant provider for terraform.
 
 ## Installation
-TODO
+Download [the latest release] for your appropriate OS and architecture and
+extract the archive. Then copy the binary to [the terraform plugin directory].
 
 ## Usage
 ```hcl
@@ -30,3 +31,6 @@ absolute or relative paths.
   * `ssh_config.*.private_key` - private ssh key for the connection
   * `ssh_config.*.agent` - whether or not to use the agent for authentication
     (always "false" for now).
+
+[the latest release]: https://github.com/bmatcuk/terraform-provider-vagrant/releases/latest
+[the terraform plugin directory]: https://www.terraform.io/docs/configuration/providers.html#third-party-plugins

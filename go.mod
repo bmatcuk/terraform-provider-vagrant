@@ -39,6 +39,7 @@ require (
 	github.com/ulikunitz/xz v0.5.4 // indirect
 	github.com/zclconf/go-cty v0.0.0-20180815031001-58bb2bc0302a // indirect
 	golang.org/x/crypto v0.0.0-20180808211826-de0752318171 // indirect
+	golang.org/x/sys v0.0.0-20180824143301-4910a1d54f87 // indirect
 	google.golang.org/genproto v0.0.0-20180808183934-383e8b2c3b9e // indirect
 	google.golang.org/grpc v1.14.0 // indirect
 )
