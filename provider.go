@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+// Provider returns the terraform provider schema.
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		ConfigureFunc: vagrantConfigure,

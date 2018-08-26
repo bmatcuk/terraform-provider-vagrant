@@ -24,7 +24,7 @@ func resourceVagrantVM() *schema.Resource {
 
 		SchemaVersion: 1,
 		Schema: map[string]*schema.Schema{
-			"vagrantfile_dir": &schema.Schema{
+			"vagrantfile_dir": {
 				Description:  "Path to the directory where the Vagrantfile can be found. Defaults to the current directory.",
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -32,43 +32,43 @@ func resourceVagrantVM() *schema.Resource {
 				ValidateFunc: resourceVagrantVMPathToVagrantfileValidate,
 			},
 
-			"ssh_config": &schema.Schema{
+			"ssh_config": {
 				Description: "SSH connection information.",
 				Type:        schema.TypeList,
 				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": &schema.Schema{
+						"type": {
 							Description: "Connection type. Only valid option is ssh at this time.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 
-						"user": &schema.Schema{
+						"user": {
 							Description: "The user for the connection.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 
-						"host": &schema.Schema{
+						"host": {
 							Description: "The address of the resource to connect to.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 
-						"port": &schema.Schema{
+						"port": {
 							Description: "The port to connect to.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 
-						"private_key": &schema.Schema{
+						"private_key": {
 							Description: "Private SSH key for the connection.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 
-						"agent": &schema.Schema{
+						"agent": {
 							Description: "Whether or not to use the agent to authenticate.",
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -97,7 +97,7 @@ func resourceVagrantVMCreate(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId(buildId(cmd.VMInfo))
 
-	return readVagrantInfo(client, ctx, d)
+	return readVagrantInfo(ctx, client, d)
 }
 
 func resourceVagrantVMRead(d *schema.ResourceData, m interface{}) error {
@@ -109,7 +109,7 @@ func resourceVagrantVMRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	return readVagrantInfo(client, ctx, d)
+	return readVagrantInfo(ctx, client, d)
 }
 
 func resourceVagrantVMUpdate(d *schema.ResourceData, m interface{}) error {
@@ -127,7 +127,7 @@ func resourceVagrantVMUpdate(d *schema.ResourceData, m interface{}) error {
 		return nil
 	}
 
-	return readVagrantInfo(client, ctx, d)
+	return readVagrantInfo(ctx, client, d)
 }
 
 func resourceVagrantVMDelete(d *schema.ResourceData, m interface{}) error {
@@ -141,11 +141,7 @@ func resourceVagrantVMDelete(d *schema.ResourceData, m interface{}) error {
 
 	cmd := client.Destroy()
 	cmd.Context = ctx
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-
-	return nil
+	return cmd.Run()
 }
 
 func resourceVagrantVMExists(d *schema.ResourceData, m interface{}) (bool, error) {
@@ -200,7 +196,7 @@ func buildId(info map[string]*vagrant.VMInfo) string {
 	var keys sort.StringSlice = make([]string, len(info)+1)
 	keys[0] = "vagrant"
 	i := 1
-	for key, _ := range info {
+	for key := range info {
 		keys[i] = key
 		i++
 	}
@@ -208,7 +204,7 @@ func buildId(info map[string]*vagrant.VMInfo) string {
 	return strings.Join(keys, ":")
 }
 
-func readVagrantInfo(client *vagrant.VagrantClient, ctx context.Context, d *schema.ResourceData) error {
+func readVagrantInfo(ctx context.Context, client *vagrant.VagrantClient, d *schema.ResourceData) error {
 	cmd := client.SSHConfig()
 	cmd.Context = ctx
 	if err := cmd.Run(); err != nil {
