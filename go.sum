@@ -18,6 +18,10 @@ github.com/bmatcuk/go-vagrant v1.1.1 h1:rZ+zCTv3xJM1LINJwVtVGkXs+L6HXstA2QnX8QLf
 github.com/bmatcuk/go-vagrant v1.1.1/go.mod h1:wybyCOf1R4TB2OXU8l6ghwqlCUJvBhWS5TeVpNj1doc=
 github.com/bmatcuk/go-vagrant v1.1.2 h1:ZZsbvNSg3DmhzNSoPbd0MvbPwWSnkSfVfJdPbtBmQiA=
 github.com/bmatcuk/go-vagrant v1.1.2/go.mod h1:wybyCOf1R4TB2OXU8l6ghwqlCUJvBhWS5TeVpNj1doc=
+github.com/bmatcuk/go-vagrant v1.2.0 h1:z8tZAwribzCSs9HEPv7snqqXYghH/3VXBTlD4zGFTeE=
+github.com/bmatcuk/go-vagrant v1.2.0/go.mod h1:wybyCOf1R4TB2OXU8l6ghwqlCUJvBhWS5TeVpNj1doc=
+github.com/bmatcuk/go-vagrant v1.2.1 h1:GQddoSzp8qtNzQAlob5wHvAUPQL7gy3VapBf7SgJ0Bk=
+github.com/bmatcuk/go-vagrant v1.2.1/go.mod h1:wybyCOf1R4TB2OXU8l6ghwqlCUJvBhWS5TeVpNj1doc=
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/go-ini/ini v1.25.4 h1:Mujh4R/dH6YL8bxuISne3xX2+qcQ9p0IxKAP6ExWoUo=

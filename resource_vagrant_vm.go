@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -30,6 +31,24 @@ func resourceVagrantVM() *schema.Resource {
 				Optional:     true,
 				Default:      ".",
 				ValidateFunc: resourceVagrantVMPathToVagrantfileValidate,
+			},
+
+			"env": {
+				Description: "Environment variables to pass to the Vagrantfile.",
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
+			"machine_names": {
+				Description: "Names of the vagrant machines from the Vagrantfile. Names are in the same order as ssh_config.",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 
 			"ssh_config": {
@@ -91,6 +110,8 @@ func resourceVagrantVMCreate(d *schema.ResourceData, m interface{}) error {
 
 	cmd := client.Up()
 	cmd.Context = ctx
+	cmd.Env = buildEnvironment(d.Get("env").(map[string]string))
+	cmd.Parallel = true
 	if err := cmd.Run(); err != nil {
 		return err
 	}
@@ -123,6 +144,7 @@ func resourceVagrantVMUpdate(d *schema.ResourceData, m interface{}) error {
 
 	cmd := client.Reload()
 	cmd.Context = ctx
+	cmd.Env = buildEnvironment(d.Get("env").(map[string]string))
 	if err := cmd.Run(); err != nil {
 		return nil
 	}
@@ -141,6 +163,7 @@ func resourceVagrantVMDelete(d *schema.ResourceData, m interface{}) error {
 
 	cmd := client.Destroy()
 	cmd.Context = ctx
+	cmd.Env = buildEnvironment(d.Get("env").(map[string]string))
 	return cmd.Run()
 }
 
@@ -155,6 +178,7 @@ func resourceVagrantVMExists(d *schema.ResourceData, m interface{}) (bool, error
 
 	cmd := client.Status()
 	cmd.Context = ctx
+	cmd.Env = buildEnvironment(d.Get("env").(map[string]string))
 	if err := cmd.Run(); err != nil {
 		return false, err
 	}
@@ -207,13 +231,15 @@ func buildId(info map[string]*vagrant.VMInfo) string {
 func readVagrantInfo(ctx context.Context, client *vagrant.VagrantClient, d *schema.ResourceData) error {
 	cmd := client.SSHConfig()
 	cmd.Context = ctx
+	cmd.Env = buildEnvironment(d.Get("env").(map[string]string))
 	if err := cmd.Run(); err != nil {
 		return err
 	}
 
 	sshConfigs := make([]map[string]string, len(cmd.Configs))
+	keys := make([]string, len(cmd.Configs))
 	i := 0
-	for _, config := range cmd.Configs {
+	for key, config := range cmd.Configs {
 		sshConfig := make(map[string]string, 6)
 		sshConfig["type"] = "ssh"
 		sshConfig["user"] = config.User
@@ -224,13 +250,30 @@ func readVagrantInfo(ctx context.Context, client *vagrant.VagrantClient, d *sche
 		}
 		sshConfig["agent"] = "false"
 		sshConfigs[i] = sshConfig
+		keys[i] = key
 		i++
 	}
+
 	d.Set("ssh_config", sshConfigs)
+	d.Set("machine_names", keys)
 
 	if len(sshConfigs) == 1 {
 		d.SetConnInfo(sshConfigs[0])
 	}
 
 	return nil
+}
+
+func buildEnvironment(env map[string]string) []string {
+	if len(env) == 0 {
+		return nil
+	}
+
+	envArray := make([]string, len(env))
+	i := 0
+	for key, value := range env {
+		envArray[i] = fmt.Sprintf("%v=%v", key, value)
+		i++
+	}
+	return envArray
 }

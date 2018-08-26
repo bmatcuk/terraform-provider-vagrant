@@ -13,6 +13,9 @@ extract the archive. Then copy the binary to [the terraform plugin directory].
 ```hcl
 resource "vagrant_vm" "my_vagrant_vm" {
   vagrantfile_dir = "path/to/dir"
+  env = {
+    "key": "value",
+  }
 }
 ```
 
@@ -20,6 +23,9 @@ resource "vagrant_vm" "my_vagrant_vm" {
 Vagrantfile must exist when terraform runs or else it will throw an error. This
 option defaults to `.`, ie, the current directory and you may set this value to
 absolute or relative paths.
+
+**env** is a map of additional environment variables to pass to the Vagrantfile.
+The environment variables set by the calling process are always passed.
 
 ### Outputs
 * `ssh_config.#` - SSH connection info. Since a Vagrantfile may create multiple
@@ -32,6 +38,12 @@ absolute or relative paths.
   * `ssh_config.*.private_key` - private ssh key for the connection
   * `ssh_config.*.agent` - whether or not to use the agent for authentication
     (always "false" for now).
+
+If there is only one machine built by the Vagrantfile, the connection info will
+be set in the `resource` block so you can include provisioners without any
+additional configuration. However, if there are more than one machines, the
+connection info will not be set; you'll need to create some `null_resources` to
+do your provisioning.
 
 [the latest release]: https://github.com/bmatcuk/terraform-provider-vagrant/releases/latest
 [the terraform plugin directory]: https://www.terraform.io/docs/configuration/providers.html#third-party-plugins
