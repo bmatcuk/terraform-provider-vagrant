@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -108,10 +109,12 @@ func resourceVagrantVMCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	log.Println("Bringing up vagrant...")
 	cmd := client.Up()
 	cmd.Context = ctx
-	cmd.Env = buildEnvironment(d.Get("env").(map[string]string))
+	cmd.Env = buildEnvironment(d.Get("env").(map[string]interface{}))
 	cmd.Parallel = true
+	cmd.Verbose = true
 	if err := cmd.Run(); err != nil {
 		return err
 	}
@@ -142,9 +145,11 @@ func resourceVagrantVMUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	log.Println("Reloading vagrant...")
 	cmd := client.Reload()
 	cmd.Context = ctx
-	cmd.Env = buildEnvironment(d.Get("env").(map[string]string))
+	cmd.Env = buildEnvironment(d.Get("env").(map[string]interface{}))
+	cmd.Verbose = true
 	if err := cmd.Run(); err != nil {
 		return nil
 	}
@@ -161,9 +166,11 @@ func resourceVagrantVMDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	log.Println("Destroying vagrant...")
 	cmd := client.Destroy()
 	cmd.Context = ctx
-	cmd.Env = buildEnvironment(d.Get("env").(map[string]string))
+	cmd.Env = buildEnvironment(d.Get("env").(map[string]interface{}))
+	cmd.Verbose = true
 	return cmd.Run()
 }
 
@@ -176,9 +183,11 @@ func resourceVagrantVMExists(d *schema.ResourceData, m interface{}) (bool, error
 		return false, err
 	}
 
+	log.Println("Getting vagrant status...")
 	cmd := client.Status()
 	cmd.Context = ctx
-	cmd.Env = buildEnvironment(d.Get("env").(map[string]string))
+	cmd.Env = buildEnvironment(d.Get("env").(map[string]interface{}))
+	cmd.Verbose = true
 	if err := cmd.Run(); err != nil {
 		return false, err
 	}
@@ -229,9 +238,11 @@ func buildId(info map[string]*vagrant.VMInfo) string {
 }
 
 func readVagrantInfo(ctx context.Context, client *vagrant.VagrantClient, d *schema.ResourceData) error {
+	log.Println("Getting vagrant ssh-config...")
 	cmd := client.SSHConfig()
 	cmd.Context = ctx
-	cmd.Env = buildEnvironment(d.Get("env").(map[string]string))
+	cmd.Env = buildEnvironment(d.Get("env").(map[string]interface{}))
+	cmd.Verbose = true
 	if err := cmd.Run(); err != nil {
 		return err
 	}
@@ -264,7 +275,7 @@ func readVagrantInfo(ctx context.Context, client *vagrant.VagrantClient, d *sche
 	return nil
 }
 
-func buildEnvironment(env map[string]string) []string {
+func buildEnvironment(env map[string]interface{}) []string {
 	if len(env) == 0 {
 		return nil
 	}
@@ -275,5 +286,7 @@ func buildEnvironment(env map[string]string) []string {
 		envArray[i] = fmt.Sprintf("%v=%v", key, value)
 		i++
 	}
+
+	log.Println("Environment:", envArray)
 	return envArray
 }
