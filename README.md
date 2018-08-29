@@ -28,6 +28,7 @@ absolute or relative paths.
 The environment variables set by the calling process are always passed.
 
 ### Outputs
+* `machine_names.#` - a list of machine names as defined in the Vagrantfile.
 * `ssh_config.#` - SSH connection info. Since a Vagrantfile may create multiple
   machines, this is a list with the following variables:
 
@@ -39,11 +40,26 @@ The environment variables set by the calling process are always passed.
   * `ssh_config.*.agent` - whether or not to use the agent for authentication
     (always "false" for now).
 
-If there is only one machine built by the Vagrantfile, the connection info will
-be set in the `resource` block so you can include provisioners without any
-additional configuration. However, if there are more than one machines, the
-connection info will not be set; you'll need to create some `null_resources` to
-do your provisioning.
+  If there is only one machine built by the Vagrantfile, the connection info
+  will be set in the `resource` block so you can include provisioners without
+  any additional configuration. However, if there is more than one machine, the
+  connection info will not be set; you'll need to create some `null_resources`
+  to do your provisioning.
+
+Note that `machine_names` and `ssh_config` are guaranteed to be in the same
+order (ie, `ssh_config[0]` is the corresponding config for the machine named
+`machine_names[0]`), but the order is undefined (ie, don't count on
+`machine_names[0]` being the first machine defined in the Vagrantfile).
+
+## Debugging
+If terrafrom is failing on the vagrant step, you can get additional output by
+running terraform with logging output enabled. Try something like:
+
+```bash
+env TF_LOG=TRACE terraform apply ...
+```
+
+And, of course, you can always run vagrant on your Vagrantfile directly.
 
 [the latest release]: https://github.com/bmatcuk/terraform-provider-vagrant/releases/latest
 [the terraform plugin directory]: https://www.terraform.io/docs/configuration/providers.html#third-party-plugins
