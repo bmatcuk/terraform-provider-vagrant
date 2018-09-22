@@ -145,15 +145,50 @@ func resourceVagrantVMUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	env := buildEnvironment(d.Get("env").(map[string]interface{}))
+
+	// reload will halt any running machines, then destroy any halted or
+	// suspended machines, and bring them back up
 	log.Println("Reloading vagrant...")
-	cmd := client.Reload()
-	cmd.Context = ctx
-	cmd.Env = buildEnvironment(d.Get("env").(map[string]interface{}))
-	cmd.Verbose = true
-	if err := cmd.Run(); err != nil {
-		return nil
+	reload := client.Reload()
+	reload.Context = ctx
+	reload.Env = env
+	reload.Verbose = true
+	if err := reload.Run(); err != nil {
+		return err
 	}
 
+	// reload will not bring up new machines, so bring them up here...
+	log.Println("Checking machine states...")
+	status := client.Status()
+	status.Context = ctx
+	status.Env = env
+	status.Verbose = true
+	if err := status.Run(); err != nil {
+		return err
+	}
+
+	allExist := true
+	for _, state := range status.Status {
+		if state == "not_created" {
+			allExist = false
+			break
+		}
+	}
+
+	if !allExist {
+		log.Println("Bringing up new machines...")
+		up := client.Up()
+		up.Context = ctx
+		up.Env = env
+		up.Parallel = true
+		up.Verbose = true
+		if err := up.Run(); err != nil {
+			return err
+		}
+	}
+
+	// we're done!
 	return readVagrantInfo(ctx, client, d)
 }
 

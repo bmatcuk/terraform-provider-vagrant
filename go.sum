@@ -24,6 +24,12 @@ github.com/bmatcuk/go-vagrant v1.2.1 h1:GQddoSzp8qtNzQAlob5wHvAUPQL7gy3VapBf7SgJ
 github.com/bmatcuk/go-vagrant v1.2.1/go.mod h1:wybyCOf1R4TB2OXU8l6ghwqlCUJvBhWS5TeVpNj1doc=
 github.com/bmatcuk/go-vagrant v1.2.2 h1:BOD0Jg+PdW9f3+Cz4Bcbr8qZb5qht5LMScU2M67u6pQ=
 github.com/bmatcuk/go-vagrant v1.2.2/go.mod h1:wybyCOf1R4TB2OXU8l6ghwqlCUJvBhWS5TeVpNj1doc=
+github.com/bmatcuk/go-vagrant v1.4.0 h1:M5WEC7dmMtojtrsg9qY+IPHgMMzX/tFwUkoJzOsefP0=
+github.com/bmatcuk/go-vagrant v1.4.0/go.mod h1:wybyCOf1R4TB2OXU8l6ghwqlCUJvBhWS5TeVpNj1doc=
+github.com/bmatcuk/go-vagrant v1.4.1 h1:Cr6ckasV/Tbq+xD8hIgFoVWNuOxAHAfVJ90sCe9nbpE=
+github.com/bmatcuk/go-vagrant v1.4.1/go.mod h1:wybyCOf1R4TB2OXU8l6ghwqlCUJvBhWS5TeVpNj1doc=
+github.com/bmatcuk/go-vagrant v1.4.2 h1:w+MZA8goq91xH+JEZWLsrde8wm/4X9q9QDRcZoY6/ww=
+github.com/bmatcuk/go-vagrant v1.4.2/go.mod h1:wybyCOf1R4TB2OXU8l6ghwqlCUJvBhWS5TeVpNj1doc=
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/go-ini/ini v1.25.4 h1:Mujh4R/dH6YL8bxuISne3xX2+qcQ9p0IxKAP6ExWoUo=
@@ -56,6 +62,8 @@ github.com/hashicorp/hil v0.0.0-20170627220502-fa9f258a9250 h1:fooK5IvDL/KIsi4Lx
 github.com/hashicorp/hil v0.0.0-20170627220502-fa9f258a9250/go.mod h1:KHvg/R2/dPtaePb16oW4qIyzkMxXOL38xjRN64adsts=
 github.com/hashicorp/terraform v0.11.7 h1:NC3flYWAINcKyjTRIyU/Sz6kZLuSdAGEpqoyurZxLN0=
 github.com/hashicorp/terraform v0.11.7/go.mod h1:uN1KUiT7Wdg61fPwsGXQwK3c8PmpIVZrt5Vcb1VrSoM=
+github.com/hashicorp/terraform v0.11.8 h1:fxt+ihK6GZA8Qj2OSNW/j5hn8sE7pFMFS6/HTseTBJI=
+github.com/hashicorp/terraform v0.11.8/go.mod h1:uN1KUiT7Wdg61fPwsGXQwK3c8PmpIVZrt5Vcb1VrSoM=
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb h1:b5rjCoWHc7eqmAS4/qyk21ZsHyb6Mxv/jykxvNTkU4M=
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8 h1:12VvqtR6Aowv3l/EQUlocDHW2Cp4G9WJVH7uyH8QFJE=
