@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/bmatcuk/go-vagrant"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"context"
 	"fmt"
