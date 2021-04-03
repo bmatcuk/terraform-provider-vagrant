@@ -16,3 +16,5 @@ config.ign.merged
 .terraform
 coverage.txt
 dist
+
+.idea
