@@ -1,0 +1,22 @@
+---
+page_title: "vagrant_vm Resource - terraform-provider-vagrant"
+description: |-
+  Integrate vagrant into terraform.
+---
+
+# vagrant_vm (Resource)
+
+## Forcing an Update
+The easiest way to force an update is to set, or change the value of, some
+environment variable. This will signal to terraform that the vagrant_vm
+resource needs to update.
+
+In the example below, a environment variable, `VAGRANTFILE_HASH`, is set to
+the md5 hash of the Vagrantfile. When the file changes, the hash will change,
+and terraform will ask for an update.
+
+## Example Usage
+
+{{tffile "examples/resources/vagrant_vm/resource.tf"}}
+
+{{ .SchemaMarkdown | trimspace }}

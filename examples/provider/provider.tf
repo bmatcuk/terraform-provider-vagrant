@@ -1,0 +1,3 @@
+provider "vagrant" {
+  # no config
+}

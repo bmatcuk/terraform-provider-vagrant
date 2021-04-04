@@ -1,13 +1,30 @@
 ![Release](https://img.shields.io/github/release/bmatcuk/terraform-provider-vagrant.svg?branch=master)
-[![Build Status](https://travis-ci.com/bmatcuk/terraform-provider-vagrant.svg?branch=master)](https://travis-ci.com/bmatcuk/terraform-provider-vagrant)
+[![Build Status](https://github.com/bmatcuk/terraform-provider-vagrant/actions/workflows/release.yml/badge.svg)](https://github.com/bmatcuk/terraform-provider-vagrant/actions/workflows/release.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bmatcuk/terraform-provider-vagrant)](https://goreportcard.com/report/github.com/bmatcuk/terraform-provider-vagrant)
 
 # terraform-provider-vagrant
 A Vagrant provider for terraform.
 
+A note about lippertmarkus/vagrant in the registry: when I originally wrote
+this provider, the terraform registry didn't exist. My terraform needs waned
+and I didn't hear about the registry until some time later. lippertmarkus
+forked my provider and published to the registry as a convenience. Thanks! But,
+it's just an older version of this exact same codebase. So, I recommend you use
+bmatcuk/vagrant to get the latest updates instead.
+
 ## Installation
-Download [the latest release] for your appropriate OS and architecture and
-extract the archive. Then copy the binary to [the terraform plugin directory].
+Add bmatcuk/vagrant to [required_providers]:
+
+```hcl
+terraform {
+  required_providers {
+    vagrant = {
+      source  = "bmatcuk/vagrant"
+      version = "~> 3.0.0"
+    }
+  }
+}
+```
 
 ## Usage
 ```hcl
@@ -96,5 +113,4 @@ env TF_LOG=TRACE terraform apply ...
 
 And, of course, you can always run vagrant on your Vagrantfile directly.
 
-[the latest release]: https://github.com/bmatcuk/terraform-provider-vagrant/releases/latest
-[the terraform plugin directory]: https://www.terraform.io/docs/configuration/providers.html#third-party-plugins
+[required_providers]: https://www.terraform.io/docs/language/providers/requirements.html#requiring-providers
