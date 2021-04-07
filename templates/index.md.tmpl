@@ -5,7 +5,7 @@ description: |-
 ---
 
 # Vagrant Provider
-A Vagrant provider for terraform.
+A Vagrant provider for terraform 0.12+.
 
 A note about lippertmarkus/vagrant in the registry: when I originally wrote
 this provider, the terraform registry didn't exist. My terraform needs waned
@@ -22,7 +22,7 @@ terraform {
   required_providers {
     vagrant = {
       source  = "bmatcuk/vagrant"
-      version = "~> 3.0.0"
+      version = "~> 4.0.0"
     }
   }
 }
@@ -32,7 +32,20 @@ terraform {
 
 {{tffile "examples/provider/provider.tf"}}
 
-{{ .SchemaMarkdown | trimspace }}
+## Removing Machines
+Sadly, due to some limitations in vagrant, it's not possible to automatically
+remove a portion of machines from a Vagrantfile. In other words, if your
+Vagrantfile defines 5 machines and you remove 2 of them from the Vagrantfile,
+they will be left running in your vagrant provider (ie, virtualbox or whatever)
+with no way of removing them via vagrant (or terraform).
+
+If you intend of removing some machines, you should manually run `vagrant
+destroy MACHINE_NAME` on those machines you wish to remove *before* editing the
+Vagrantfile. Then update your Vagrantfile and allow terraform to do the rest.
+
+If you forget, you can manually cleanup these old VMs by launching your vagrant
+provider's UI and deleting the machines. Then run `vagrant global-status
+--prune` to cleanup vagrant's cache of these machines.
 
 ## Debugging
 If terrafrom is failing on the vagrant step, you can get additional output by

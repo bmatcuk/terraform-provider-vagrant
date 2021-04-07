@@ -1,20 +1,41 @@
 package main
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Provider returns the terraform provider schema.
-func Provider() *schema.Provider {
-	return &schema.Provider{
-		ConfigureFunc: vagrantConfigure,
-
-		ResourcesMap: map[string]*schema.Resource{
-			"vagrant_vm": resourceVagrantVM(),
-		},
+func init() {
+	schema.SchemaDescriptionBuilder = func(s *schema.Schema) string {
+		desc := s.Description
+		if s.Default != nil {
+			desc += fmt.Sprintf(" Defaults to `%v`.", s.Default)
+		}
+		if s.Deprecated != "" {
+			desc += " " + s.Deprecated
+		}
+		return desc
 	}
 }
 
-func vagrantConfigure(d *schema.ResourceData) (interface{}, error) {
-	return VagrantConfig{}, nil
+// Provider returns the terraform provider schema.
+func NewVagrantProvider(version string) func() *schema.Provider {
+	return func() *schema.Provider {
+		return &schema.Provider{
+			ConfigureContextFunc: vagrantConfigure(version),
+
+			ResourcesMap: map[string]*schema.Resource{
+				"vagrant_vm": resourceVagrantVM(),
+			},
+		}
+	}
+}
+
+func vagrantConfigure(version string) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		return VagrantConfig{}, nil
+	}
 }

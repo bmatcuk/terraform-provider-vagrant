@@ -21,8 +21,9 @@ and terraform will ask for an update.
 resource "vagrant_vm" "my_vagrant_vm" {
   env = {
     # force terraform to re-run vagrant if the Vagrantfile changes
-    VAGRANTFILE_HASH = "${md5(file("path/to/Vagrantfile"))}",
+    VAGRANTFILE_HASH = md5(file("./Vagrantfile")),
   }
+  get_ports = true
   # see schema for additional options
 }
 ```
@@ -33,12 +34,14 @@ resource "vagrant_vm" "my_vagrant_vm" {
 ### Optional
 
 - **env** (Map of String) Environment variables to pass to the Vagrantfile.
+- **get_ports** (Boolean) Whether or not to retrieve forwarded port information. See `ports`. Defaults to `false`.
 - **id** (String) The ID of this resource.
-- **vagrantfile_dir** (String) Path to the directory where the Vagrantfile can be found. Defaults to the current directory.
+- **vagrantfile_dir** (String) Path to the directory where the Vagrantfile can be found. Defaults to `.`.
 
 ### Read-Only
 
 - **machine_names** (List of String) Names of the vagrant machines from the Vagrantfile. Names are in the same order as ssh_config.
+- **ports** (List of List of Object) Forwarded ports per machine. Only set if `get_ports` is true.
 - **ssh_config** (List of Object) SSH connection information. (see [below for nested schema](#nestedatt--ssh_config))
 
 <a id="nestedatt--ssh_config"></a>

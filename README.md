@@ -3,7 +3,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/bmatcuk/terraform-provider-vagrant)](https://goreportcard.com/report/github.com/bmatcuk/terraform-provider-vagrant)
 
 # terraform-provider-vagrant
-A Vagrant provider for terraform.
+A Vagrant provider for terraform 0.12+.
 
 A note about lippertmarkus/vagrant in the registry: when I originally wrote
 this provider, the terraform registry didn't exist. My terraform needs waned
@@ -20,7 +20,7 @@ terraform {
   required_providers {
     vagrant = {
       source  = "bmatcuk/vagrant"
-      version = "~> 3.0.0"
+      version = "~> 4.0.0"
     }
   }
 }
@@ -33,6 +33,7 @@ resource "vagrant_vm" "my_vagrant_vm" {
   env = {
     KEY = "value",
   }
+  get_ports = true
 }
 ```
 
@@ -43,6 +44,14 @@ absolute or relative paths.
 
 **env** is a map of additional environment variables to pass to the Vagrantfile.
 The environment variables set by the calling process are always passed.
+
+**get_ports** if `true`, information about forwarded ports will be filled in
+(see `ports` below). This is `false` by default because it may take some time
+to run.
+
+If you have multiple Vagrantfiles, provide an `alias` in the `provider` block
+and use the `provider` meta-argument in the resource/data-source
+configurations.
 
 ### Outputs
 * `machine_names.#` - a list of machine names as defined in the Vagrantfile.
@@ -62,10 +71,16 @@ The environment variables set by the calling process are always passed.
   any additional configuration. However, if there is more than one machine, the
   connection info will not be set; you'll need to create some `null_resources`
   to do your provisioning.
+* `ports.#` - information about forwarded ports if `get_ports` is `true`. This
+  is a list of lists: for each machine in the Vagrantfile, `ports` will have a
+  list with the following variables:
 
-Note that `machine_names` and `ssh_config` are guaranteed to be in the same
-order (ie, `ssh_config[0]` is the corresponding config for the machine named
-`machine_names[0]`), but the order is undefined (ie, don't count on
+  * `ports.*.*.guest` - the port on the guest VM
+  * `ports.*.*.host` - the host port forwarded to the guest VM
+
+Note that `machine_names`, `ssh_config`, and `ports` are guaranteed to be in
+the same order (ie, `ssh_config[0]` is the corresponding config for the machine
+named `machine_names[0]`), but the order is undefined (ie, don't count on
 `machine_names[0]` being the first machine defined in the Vagrantfile).
 
 ## Forcing an Update
@@ -80,7 +95,7 @@ something like this:
 resource "vagrant_vm" "my_vagrant_vm" {
   vagrantfile_dir = "path/to/dir"
   env = {
-    VAGRANTFILE_HASH = "${md5(file("path/to/dir/Vagrantfile"))}",
+    VAGRANTFILE_HASH = md5(file("path/to/dir/Vagrantfile")),
   }
 }
 ```
@@ -112,5 +127,20 @@ env TF_LOG=TRACE terraform apply ...
 ```
 
 And, of course, you can always run vagrant on your Vagrantfile directly.
+
+## Local Development
+The example in `examples/resources/vagrant_vm` is fully functioning, but you'll
+need to compile this provider and put it in a place terraform can find it:
+
+```bash
+go build
+mkdir -p examples/resources/vagrant_vm/terraform.d/plugins/registry.terraform.io/bmatcuk/vagrant/4.0.0/darwin_amd64
+mv terraform-provider-vagrant examples/resources/vagrant_vm/terraform.d/plugins/registry.terraform.io/bmatcuk/vagrant/4.0.0/darwin_amd64/
+cd examples/resources/vagrant_vm
+terraform init
+terraform apply
+```
+
+Adjust `darwin_amd64` to match your system.
 
 [required_providers]: https://www.terraform.io/docs/language/providers/requirements.html#requiring-providers

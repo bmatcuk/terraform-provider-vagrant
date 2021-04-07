@@ -19,7 +19,7 @@ builds:
       - goarch: '386'
         goos: darwin
     ldflags:
-      - -s -w -X version.ProviderVersion={{.Version}}
+      - -s -w -X main.version={{.Version}}
     mod_timestamp: '{{ .CommitTimestamp }}'
 archives:
   - name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'

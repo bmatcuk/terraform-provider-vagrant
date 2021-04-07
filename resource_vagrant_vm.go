@@ -1,14 +1,16 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/bmatcuk/go-vagrant"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"context"
-	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -18,16 +20,17 @@ import (
 
 func resourceVagrantVM() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVagrantVMCreate,
-		Read:   resourceVagrantVMRead,
-		Update: resourceVagrantVMUpdate,
-		Delete: resourceVagrantVMDelete,
-		Exists: resourceVagrantVMExists,
+		Description: "Integrate vagrant into terraform.",
+
+		CreateContext: resourceVagrantVMCreate,
+		ReadContext:   resourceVagrantVMRead,
+		UpdateContext: resourceVagrantVMUpdate,
+		DeleteContext: resourceVagrantVMDelete,
 
 		SchemaVersion: 1,
 		Schema: map[string]*schema.Schema{
 			"vagrantfile_dir": {
-				Description:  "Path to the directory where the Vagrantfile can be found. Defaults to the current directory.",
+				Description:  "Path to the directory where the Vagrantfile can be found.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      ".",
@@ -41,6 +44,13 @@ func resourceVagrantVM() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+
+			"get_ports": {
+				Description: "Whether or not to retrieve forwarded port information. See `ports`.",
+				Type: schema.TypeBool,
+				Optional: true,
+				Default: false,
 			},
 
 			"machine_names": {
@@ -96,17 +106,41 @@ func resourceVagrantVM() *schema.Resource {
 					},
 				},
 			},
+
+			"ports": {
+				Description: "Forwarded ports per machine. Only set if `get_ports` is true.",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeList,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"guest": {
+								Description: "The port on the guest machine.",
+								Type:        schema.TypeInt,
+								Computed:    true,
+							},
+
+							"host": {
+								Description: "The port on the host machine which maps to the guest port.",
+								Type:        schema.TypeInt,
+								Computed:    true,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
-func resourceVagrantVMCreate(d *schema.ResourceData, m interface{}) error {
-	ctx, cancelFunc := getContext(d.Timeout(schema.TimeoutCreate))
+func resourceVagrantVMCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	ctx, cancelFunc := contextWithTimeout(ctx, d.Timeout(schema.TimeoutCreate))
 	defer cancelFunc()
 
 	client, err := vagrant.NewVagrantClient(d.Get("vagrantfile_dir").(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Println("Bringing up vagrant...")
@@ -116,7 +150,7 @@ func resourceVagrantVMCreate(d *schema.ResourceData, m interface{}) error {
 	cmd.Parallel = true
 	cmd.Verbose = true
 	if err := cmd.Run(); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(buildId(cmd.VMInfo))
@@ -124,25 +158,34 @@ func resourceVagrantVMCreate(d *schema.ResourceData, m interface{}) error {
 	return readVagrantInfo(ctx, client, d)
 }
 
-func resourceVagrantVMRead(d *schema.ResourceData, m interface{}) error {
-	ctx, cancelFunc := getContext(d.Timeout(schema.TimeoutRead))
+func resourceVagrantVMRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	ctx, cancelFunc := contextWithTimeout(ctx, d.Timeout(schema.TimeoutRead))
 	defer cancelFunc()
 
 	client, err := vagrant.NewVagrantClient(d.Get("vagrantfile_dir").(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
+	}
+
+	exists, err := checkIfVMExists(ctx, client, d)
+	if err != nil {
+		return diag.FromErr(err)
+	} else if !exists {
+		// this will force terraform to run create again
+		d.SetId("")
+		return nil
 	}
 
 	return readVagrantInfo(ctx, client, d)
 }
 
-func resourceVagrantVMUpdate(d *schema.ResourceData, m interface{}) error {
-	ctx, cancelFunc := getContext(d.Timeout(schema.TimeoutUpdate))
+func resourceVagrantVMUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	ctx, cancelFunc := contextWithTimeout(ctx, d.Timeout(schema.TimeoutUpdate))
 	defer cancelFunc()
 
 	client, err := vagrant.NewVagrantClient(d.Get("vagrantfile_dir").(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	env := buildEnvironment(d.Get("env").(map[string]interface{}))
@@ -155,7 +198,7 @@ func resourceVagrantVMUpdate(d *schema.ResourceData, m interface{}) error {
 	reload.Env = env
 	reload.Verbose = true
 	if err := reload.Run(); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// reload will not bring up new machines, so bring them up here...
@@ -165,7 +208,7 @@ func resourceVagrantVMUpdate(d *schema.ResourceData, m interface{}) error {
 	status.Env = env
 	status.Verbose = true
 	if err := status.Run(); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	allExist := true
@@ -184,7 +227,7 @@ func resourceVagrantVMUpdate(d *schema.ResourceData, m interface{}) error {
 		up.Parallel = true
 		up.Verbose = true
 		if err := up.Run(); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -192,13 +235,13 @@ func resourceVagrantVMUpdate(d *schema.ResourceData, m interface{}) error {
 	return readVagrantInfo(ctx, client, d)
 }
 
-func resourceVagrantVMDelete(d *schema.ResourceData, m interface{}) error {
-	ctx, cancelFunc := getContext(d.Timeout(schema.TimeoutDelete))
+func resourceVagrantVMDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	ctx, cancelFunc := contextWithTimeout(ctx, d.Timeout(schema.TimeoutDelete))
 	defer cancelFunc()
 
 	client, err := vagrant.NewVagrantClient(d.Get("vagrantfile_dir").(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Println("Destroying vagrant...")
@@ -206,42 +249,12 @@ func resourceVagrantVMDelete(d *schema.ResourceData, m interface{}) error {
 	cmd.Context = ctx
 	cmd.Env = buildEnvironment(d.Get("env").(map[string]interface{}))
 	cmd.Verbose = true
-	return cmd.Run()
-}
 
-func resourceVagrantVMExists(d *schema.ResourceData, m interface{}) (bool, error) {
-	ctx, cancelFunc := getContext(d.Timeout(schema.TimeoutRead))
-	defer cancelFunc()
-
-	client, err := vagrant.NewVagrantClient(d.Get("vagrantfile_dir").(string))
+	err = cmd.Run()
 	if err != nil {
-		return false, err
+		return diag.FromErr(err)
 	}
-
-	log.Println("Getting vagrant status...")
-	cmd := client.Status()
-	cmd.Context = ctx
-	cmd.Env = buildEnvironment(d.Get("env").(map[string]interface{}))
-	cmd.Verbose = true
-	if err := cmd.Run(); err != nil {
-		return false, err
-	}
-
-	// if any machines are not running, then let's say they don't exist
-	exists := true
-	for _, status := range cmd.Status {
-		if status != "running" {
-			exists = false
-			break
-		}
-	}
-
-	if !exists {
-		// this will force terraform to run create again
-		d.SetId("")
-	}
-
-	return exists, nil
+	return nil
 }
 
 func resourceVagrantVMPathToVagrantfileValidate(val interface{}, key string) ([]string, []error) {
@@ -252,8 +265,7 @@ func resourceVagrantVMPathToVagrantfileValidate(val interface{}, key string) ([]
 	return nil, nil
 }
 
-func getContext(timeout time.Duration) (context.Context, context.CancelFunc) {
-	ctx := context.Background()
+func contextWithTimeout(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
 	if int64(timeout) > 0 {
 		return context.WithTimeout(ctx, timeout)
 	}
@@ -272,14 +284,38 @@ func buildId(info map[string]*vagrant.VMInfo) string {
 	return strings.Join(keys, ":")
 }
 
-func readVagrantInfo(ctx context.Context, client *vagrant.VagrantClient, d *schema.ResourceData) error {
-	log.Println("Getting vagrant ssh-config...")
-	cmd := client.SSHConfig()
+func checkIfVMExists(ctx context.Context, client *vagrant.VagrantClient, d *schema.ResourceData) (bool, error) {
+	log.Println("Getting vagrant status...")
+	cmd := client.Status()
 	cmd.Context = ctx
 	cmd.Env = buildEnvironment(d.Get("env").(map[string]interface{}))
 	cmd.Verbose = true
 	if err := cmd.Run(); err != nil {
-		return err
+		return false, err
+	}
+
+	// if any machines are not running, then let's say they don't exist
+	exists := true
+	for _, status := range cmd.Status {
+		if status != "running" {
+			exists = false
+			break
+		}
+	}
+
+	return exists, nil
+}
+
+func readVagrantInfo(ctx context.Context, client *vagrant.VagrantClient, d *schema.ResourceData) diag.Diagnostics {
+	env := buildEnvironment(d.Get("env").(map[string]interface{}))
+
+	log.Println("Getting vagrant ssh-config...")
+	cmd := client.SSHConfig()
+	cmd.Context = ctx
+	cmd.Env = env
+	cmd.Verbose = true
+	if err := cmd.Run(); err != nil {
+		return diag.FromErr(err)
 	}
 
 	sshConfigs := make([]map[string]string, len(cmd.Configs))
@@ -306,6 +342,29 @@ func readVagrantInfo(ctx context.Context, client *vagrant.VagrantClient, d *sche
 	if len(sshConfigs) == 1 {
 		d.SetConnInfo(sshConfigs[0])
 	}
+
+	ports := make([][]map[string]int, len(keys))
+	if (d.Get("get_ports").(bool)) {
+		for i, machine := range keys {
+			portCmd := client.Port()
+			portCmd.Context = ctx
+			portCmd.Env = env
+			portCmd.MachineName = machine
+			portCmd.Verbose = true
+			if err := portCmd.Run(); err != nil {
+				return diag.FromErr(err)
+			}
+
+			ports[i] = make([]map[string]int, len(portCmd.ForwardedPorts))
+			for j, p := range portCmd.ForwardedPorts {
+				port := make(map[string]int, 2)
+				port["guest"] = p.Guest
+				port["host"] = p.Host
+				ports[i][j] = port
+			}
+		}
+	}
+	d.Set("ports", ports)
 
 	return nil
 }
