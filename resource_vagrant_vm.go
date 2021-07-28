@@ -6,6 +6,7 @@ import (
 
 	"github.com/bmatcuk/go-vagrant"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"context"
@@ -27,8 +28,21 @@ func resourceVagrantVM() *schema.Resource {
 		UpdateContext: resourceVagrantVMUpdate,
 		DeleteContext: resourceVagrantVMDelete,
 
+		CustomizeDiff: customdiff.All(
+			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool {
+				return old != new
+			}),
+		),
+
 		SchemaVersion: 1,
 		Schema: map[string]*schema.Schema{
+			"name": {
+				Description: "Name of the Vagrant resource",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "vagrantbox",
+			},
+
 			"vagrantfile_dir": {
 				Description:  "Path to the directory where the Vagrantfile can be found.",
 				Type:         schema.TypeString,
@@ -48,9 +62,9 @@ func resourceVagrantVM() *schema.Resource {
 
 			"get_ports": {
 				Description: "Whether or not to retrieve forwarded port information. See `ports`.",
-				Type: schema.TypeBool,
-				Optional: true,
-				Default: false,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
 			},
 
 			"machine_names": {
@@ -344,7 +358,7 @@ func readVagrantInfo(ctx context.Context, client *vagrant.VagrantClient, d *sche
 	}
 
 	ports := make([][]map[string]int, len(keys))
-	if (d.Get("get_ports").(bool)) {
+	if d.Get("get_ports").(bool) {
 		for i, machine := range keys {
 			portCmd := client.Port()
 			portCmd.Context = ctx
