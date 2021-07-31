@@ -15,6 +15,12 @@ In the example below, a environment variable, `VAGRANTFILE_HASH`, is set to
 the md5 hash of the Vagrantfile. When the file changes, the hash will change,
 and terraform will ask for an update.
 
+### Really Forcing an Update
+Changing an environment variable, as suggested above, essentially runs `vagrant
+reload`. Sometimes this isn't enough. If the resource's `name` changes, it will
+signal to terraform that it needs to completely destroy the resource and
+recreate it.
+
 ## Example Usage
 
 ```terraform
@@ -33,6 +39,7 @@ resource "vagrant_vm" "my_vagrant_vm" {
 
 ### Optional
 
+- **name** (String) If the name changes, it will force terraform to destroy and recreate the resource. Defaults to "vagrantbox".
 - **env** (Map of String) Environment variables to pass to the Vagrantfile.
 - **get_ports** (Boolean) Whether or not to retrieve forwarded port information. See `ports`. Defaults to `false`.
 - **id** (String) The ID of this resource.

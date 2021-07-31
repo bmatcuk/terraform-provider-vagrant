@@ -29,6 +29,7 @@ terraform {
 ## Usage
 ```hcl
 resource "vagrant_vm" "my_vagrant_vm" {
+  name = "vagrantbox"
   vagrantfile_dir = "path/to/dir"
   env = {
     KEY = "value",
@@ -37,17 +38,21 @@ resource "vagrant_vm" "my_vagrant_vm" {
 }
 ```
 
+**name** (optional) if the name changes, it will force the resource to destroy
+and recreate. Defaults to "vagrantbox".
+
 **vagrantfile_dir** is the path to a directory where a Vagrantfile lives. The
 Vagrantfile must exist when terraform runs or else it will throw an error. This
 option defaults to `.`, ie, the current directory and you may set this value to
 absolute or relative paths.
 
-**env** is a map of additional environment variables to pass to the Vagrantfile.
-The environment variables set by the calling process are always passed.
+**env** (optional) is a map of additional environment variables to pass to the
+Vagrantfile. The environment variables set by the calling process are always
+passed.
 
-**get_ports** if `true`, information about forwarded ports will be filled in
-(see `ports` below). This is `false` by default because it may take some time
-to run.
+**get_ports** (optional) if `true`, information about forwarded ports will be
+filled in (see `ports` below). This is `false` by default because it may take
+some time to run.
 
 If you have multiple Vagrantfiles, provide an `alias` in the `provider` block
 and use the `provider` meta-argument in the resource/data-source
@@ -102,6 +107,12 @@ resource "vagrant_vm" "my_vagrant_vm" {
 
 When the file changes, the hash will change, and terraform will ask for an
 update.
+
+### Really Forcing an Update
+Changing an environment variable, as suggested above, essentially runs `vagrant
+reload`. Sometimes this isn't enough. If the resource's `name` changes, it will
+signal to terraform that it needs to completely destroy the resource and
+recreate it.
 
 ## Removing Machines
 Sadly, due to some limitations in vagrant, it's not possible to automatically

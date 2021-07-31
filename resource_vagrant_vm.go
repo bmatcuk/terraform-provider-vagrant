@@ -37,7 +37,7 @@ func resourceVagrantVM() *schema.Resource {
 		SchemaVersion: 1,
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "Name of the Vagrant resource",
+				Description: "Name of the Vagrant resource. Forces resource to destroy/recreate if changed.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "vagrantbox",
