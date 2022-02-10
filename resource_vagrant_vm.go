@@ -34,6 +34,10 @@ func resourceVagrantVM() *schema.Resource {
 			}),
 		),
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(VagrantVMCreatedTimeout),
+		},
+
 		SchemaVersion: 1,
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -157,7 +161,8 @@ func resourceVagrantVMCreate(ctx context.Context, d *schema.ResourceData, m inte
 		return diag.FromErr(err)
 	}
 
-	log.Println("Bringing up vagrant...")
+	log.Println(fmt.Sprintf("Bringing up vagrant... (timeout %s)", d.Timeout(schema.TimeoutCreate)))
+
 	cmd := client.Up()
 	cmd.Context = ctx
 	cmd.Env = buildEnvironment(d.Get("env").(map[string]interface{}))
